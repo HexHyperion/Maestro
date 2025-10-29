@@ -19,6 +19,7 @@ import java.nio.file.Files
 
 class SimctlIOSDevice(
     override val deviceId: String,
+    private val iosDeviceSet: String? = null,
 ) : IOSDevice {
 
     companion object {
@@ -64,11 +65,11 @@ class SimctlIOSDevice(
     }
 
     override fun install(stream: InputStream) {
-        LocalSimulatorUtils.install(deviceId, stream)
+        LocalSimulatorUtils.install(deviceId, stream, iosDeviceSet)
     }
 
     override fun uninstall(id: String) {
-        LocalSimulatorUtils.uninstall(deviceId, id)
+        LocalSimulatorUtils.uninstall(deviceId, id, iosDeviceSet)
     }
 
     override fun clearAppState(id: String) {
@@ -77,7 +78,7 @@ class SimctlIOSDevice(
 
     override fun clearKeychain(): Result<Unit, Throwable> {
         return runCatching {
-            LocalSimulatorUtils.clearKeychain(deviceId)
+            LocalSimulatorUtils.clearKeychain(deviceId, iosDeviceSet)
         }
     }
 
@@ -90,11 +91,12 @@ class SimctlIOSDevice(
             deviceId = deviceId,
             bundleId = id,
             launchArguments = iOSLaunchArguments,
+            deviceSet = iosDeviceSet,
         )
     }
 
     override fun stop(id: String) {
-        LocalSimulatorUtils.terminate(deviceId, bundleId = id)
+        LocalSimulatorUtils.terminate(deviceId, bundleId = id, deviceSet = iosDeviceSet)
     }
 
     override fun isKeyboardVisible(): Boolean {
@@ -103,7 +105,7 @@ class SimctlIOSDevice(
 
     override fun openLink(link: String): Result<Unit, Throwable> {
         return runCatching {
-            LocalSimulatorUtils.openURL(deviceId, link)
+            LocalSimulatorUtils.openURL(deviceId, link, iosDeviceSet)
         }
     }
 
@@ -140,12 +142,12 @@ class SimctlIOSDevice(
     }
 
     override fun addMedia(path: String) {
-        LocalSimulatorUtils.addMedia(deviceId, path)
+        LocalSimulatorUtils.addMedia(deviceId, path, iosDeviceSet)
     }
 
     override fun setLocation(latitude: Double, longitude: Double): Result<Unit, Throwable> {
         return runCatching {
-            LocalSimulatorUtils.setLocation(deviceId, latitude, longitude)
+            LocalSimulatorUtils.setLocation(deviceId, latitude, longitude, iosDeviceSet)
         }
     }
 

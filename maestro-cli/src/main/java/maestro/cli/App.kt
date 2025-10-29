@@ -98,6 +98,12 @@ class App {
     )
     var deviceId: String? = null
 
+    @Option(
+        names = ["--device-set", "--set"],
+        description = ["(Optional) Path to a custom iOS Simulator device set containing the target devices. If not provided, the default XCode simulator set will be used."]
+    )
+    var iosDeviceSet: String? = null
+
     @Option(names = ["--verbose"], description = ["Enable verbose logging"])
     var verbose: Boolean = false
 }

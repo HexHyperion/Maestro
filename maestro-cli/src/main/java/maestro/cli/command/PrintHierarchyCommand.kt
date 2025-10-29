@@ -112,7 +112,8 @@ class PrintHierarchyCommand : Runnable {
             deviceId = parent?.deviceId,
             platform = parent?.platform,
             reinstallDriver = reinstallDriver,
-            deviceIndex = deviceIndex
+            deviceIndex = deviceIndex,
+            iosDeviceSet = parent?.iosDeviceSet,
         ) { session ->
             session.maestro.setAndroidChromeDevToolsEnabled(androidWebViewHierarchy == "devtools")
             val callback: (Insight) -> Unit = {

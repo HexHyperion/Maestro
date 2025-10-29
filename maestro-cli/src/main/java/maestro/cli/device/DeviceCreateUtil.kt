@@ -17,14 +17,16 @@ object DeviceCreateUtil {
         country: String? = null,
         forceCreate: Boolean = false,
         shardIndex: Int? = null,
+        iosDeviceSet: String? = null,
     ): Device.AvailableForLaunch = when (platform) {
         Platform.ANDROID -> getOrCreateAndroidDevice(osVersion, language, country, forceCreate, shardIndex)
-        Platform.IOS -> getOrCreateIosDevice(osVersion, language, country, forceCreate, shardIndex)
+        Platform.IOS -> getOrCreateIosDevice(osVersion, language, country, forceCreate, shardIndex, iosDeviceSet)
         else -> throw CliError("Unsupported platform $platform. Please specify one of: android, ios")
     }
 
     fun getOrCreateIosDevice(
-        version: Int?, language: String?, country: String?, forceCreate: Boolean, shardIndex: Int? = null
+        version: Int?, language: String?, country: String?, forceCreate: Boolean, shardIndex: Int? = null,
+        iosDeviceSet: String? = null
     ): Device.AvailableForLaunch {
         @Suppress("NAME_SHADOWING") val version = version ?: DeviceConfigIos.defaultVersion
         if (version !in DeviceConfigIos.versions) {
@@ -57,7 +59,7 @@ object DeviceCreateUtil {
 
 
         val deviceUUID = try {
-            existingDeviceId ?: DeviceService.createIosDevice(deviceName, device, runtime).toString()
+            existingDeviceId ?: DeviceService.createIosDevice(deviceName, device, runtime, iosDeviceSet).toString()
         } catch (e: IllegalStateException) {
             val error = e.message ?: ""
             if (error.contains("Invalid runtime")) {

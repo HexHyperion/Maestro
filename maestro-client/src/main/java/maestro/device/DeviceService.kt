@@ -12,6 +12,7 @@ import okio.buffer
 import okio.source
 import org.slf4j.LoggerFactory
 import util.DeviceCtlResponse
+import util.SimctlUtils
 import java.io.File
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -23,22 +24,23 @@ object DeviceService {
     fun startDevice(
         device: Device.AvailableForLaunch,
         driverHostPort: Int?,
-        connectedDevices: Set<String> = setOf()
+        connectedDevices: Set<String> = setOf(),
+        deviceSet: String? = null,
     ): Device.Connected {
         when (device.platform) {
             Platform.IOS -> {
                 try {
-                    util.LocalSimulatorUtils.bootSimulator(device.modelId)
+                    util.LocalSimulatorUtils.bootSimulator(device.modelId, deviceSet)
                     if (device.language != null && device.country != null) {
                         PrintUtils.message("Setting the device locale to ${device.language}_${device.country}...")
-                        util.LocalSimulatorUtils.setDeviceLanguage(device.modelId, device.language)
+                        util.LocalSimulatorUtils.setDeviceLanguage(device.modelId, device.language, deviceSet)
                         LocaleUtils.findIOSLocale(device.language, device.country)?.let {
-                            util.LocalSimulatorUtils.setDeviceLocale(device.modelId, it)
+                            util.LocalSimulatorUtils.setDeviceLocale(device.modelId, it, deviceSet)
                         }
-                        util.LocalSimulatorUtils.reboot(device.modelId)
+                        util.LocalSimulatorUtils.reboot(device.modelId, deviceSet)
                     }
-                    util.LocalSimulatorUtils.launchSimulator(device.modelId)
-                    util.LocalSimulatorUtils.awaitLaunch(device.modelId)
+                    util.LocalSimulatorUtils.launchSimulator(device.modelId, deviceSet)
+                    util.LocalSimulatorUtils.awaitLaunch(device.modelId, deviceSet)
                 } catch (e: util.LocalSimulatorUtils.SimctlError) {
                     logger.error("Failed to launch simulator", e)
                     throw DeviceError(e.message)
@@ -126,8 +128,9 @@ object DeviceService {
         includeWeb: Boolean = false,
         host: String? = null,
         port: Int? = null,
+        deviceSet: String? = null,
     ): List<Device.Connected> {
-        return listDevices(includeWeb = includeWeb, host, port)
+        return listDevices(includeWeb = includeWeb, host, port, deviceSet)
             .filterIsInstance<Device.Connected>()
     }
 
@@ -139,9 +142,9 @@ object DeviceService {
             .filterIsInstance<Device.AvailableForLaunch>()
     }
 
-     fun listDevices(includeWeb: Boolean, host: String? = null, port: Int? = null): List<Device> {
+     fun listDevices(includeWeb: Boolean, host: String? = null, port: Int? = null, deviceSet: String? = null): List<Device> {
         return listAndroidDevices(host, port) +
-                listIOSDevices() +
+                listIOSDevices(deviceSet) +
                 if (includeWeb) {
                     listWebDevices()
                 } else {
@@ -242,9 +245,9 @@ object DeviceService {
         return connected + avds
     }
 
-    private fun listIOSDevices(): List<Device> {
+    private fun listIOSDevices(deviceSet: String? = null): List<Device> {
         val simctlList = try {
-            util.LocalSimulatorUtils.list()
+            util.LocalSimulatorUtils.list(deviceSet)
         } catch (ignored: Exception) {
             return emptyList()
         }
@@ -316,9 +319,9 @@ object DeviceService {
     /**
      * @return true if ios simulator or android emulator is currently connected
      */
-    fun isDeviceConnected(deviceName: String, platform: Platform): Device.Connected? {
+    fun isDeviceConnected(deviceName: String, platform: Platform, deviceSet: String? = null): Device.Connected? {
         return when (platform) {
-            Platform.IOS -> listIOSDevices()
+            Platform.IOS -> listIOSDevices(deviceSet)
                 .filterIsInstance<Device.Connected>()
                 .find { it.description.contains(deviceName, ignoreCase = true) }
 
@@ -341,9 +344,9 @@ object DeviceService {
     /**
      * @return true if ios simulator or android emulator is available to launch
      */
-    fun isDeviceAvailableToLaunch(deviceName: String, platform: Platform): Device.AvailableForLaunch? {
+    fun isDeviceAvailableToLaunch(deviceName: String, platform: Platform, deviceSet: String? = null): Device.AvailableForLaunch? {
         return if (platform == Platform.IOS) {
-            listIOSDevices()
+            listIOSDevices(deviceSet)
                 .filterIsInstance<Device.AvailableForLaunch>()
                 .find { it.description.contains(deviceName, ignoreCase = true) }
         } else {
@@ -360,10 +363,8 @@ object DeviceService {
      * @param device Simulator type as specified by Apple i.e. iPhone-11
      * @param os OS runtime name as specified by Apple i.e. iOS-16-2
      */
-    fun createIosDevice(deviceName: String, device: String, os: String): UUID {
-        val command = listOf(
-            "xcrun",
-            "simctl",
+    fun createIosDevice(deviceName: String, device: String, os: String, deviceSet: String? = null): UUID {
+        val command = SimctlUtils.simctlBaseArgs(deviceSet) + listOf(
             "create",
             deviceName,
             "com.apple.CoreSimulator.SimDeviceType.$device",
@@ -527,10 +528,8 @@ object DeviceService {
         ).joinToString(separator = " ")
     }
 
-    fun deleteIosDevice(uuid: String): Boolean {
-        val command = listOf(
-            "xcrun",
-            "simctl",
+    fun deleteIosDevice(uuid: String, deviceSet: String? = null): Boolean {
+        val command = SimctlUtils.simctlBaseArgs(deviceSet) + listOf(
             "delete",
             uuid
         )
@@ -568,8 +567,8 @@ object DeviceService {
         }
     }
 
-    fun killIOSDevice(deviceId: String): Boolean {
-        val command = listOf("xcrun", "simctl", "shutdown", deviceId)
+    fun killIOSDevice(deviceId: String, deviceSet: String? = null): Boolean {
+        val command = SimctlUtils.simctlBaseArgs(deviceSet) + listOf("shutdown", deviceId)
 
         try {
             val process = ProcessBuilder(*command.toTypedArray()).start()

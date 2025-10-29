@@ -74,6 +74,7 @@ object MaestroSessionManager {
         reinstallDriver: Boolean = true,
         deviceIndex: Int? = null,
         executionPlan: WorkspaceExecutionPlanner.ExecutionPlan? = null,
+        iosDeviceSet: String? = null,
         block: (MaestroSession) -> T,
     ): T {
         val selectedDevice = selectDevice(
@@ -84,6 +85,7 @@ object MaestroSessionManager {
             teamId = teamId,
             platform = Platform.fromString(platform),
             deviceIndex = deviceIndex,
+            iosDeviceSet = iosDeviceSet,
         )
         val sessionId = UUID.randomUUID().toString()
 
@@ -115,8 +117,10 @@ object MaestroSessionManager {
             isHeadless = isHeadless,
             driverHostPort = driverHostPort,
             reinstallDriver = reinstallDriver,
-            platformConfiguration = executionPlan?.workspaceConfig?.platform
+            platformConfiguration = executionPlan?.workspaceConfig?.platform,
+            iosDeviceSet = iosDeviceSet,
         )
+
         Runtime.getRuntime().addShutdownHook(thread(start = false) {
             heartbeatFuture.cancel(true)
             SessionStore.delete(sessionId, selectedDevice.platform)
@@ -137,6 +141,7 @@ object MaestroSessionManager {
         platform: Platform? = null,
         teamId: String? = null,
         deviceIndex: Int? = null,
+        iosDeviceSet: String? = null,
     ): SelectedDevice {
 
         if (deviceId == "chromium" || platform == Platform.WEB) {
@@ -147,7 +152,7 @@ object MaestroSessionManager {
         }
 
         if (host == null) {
-            val device = PickDeviceInteractor.pickDevice(deviceId, driverHostPort, platform, deviceIndex)
+            val device = PickDeviceInteractor.pickDevice(deviceId, driverHostPort, platform, deviceIndex, iosDeviceSet)
 
             if (device.deviceType == Device.DeviceType.REAL && device.platform == Platform.IOS) {
                 PrintUtils.message("Detected connected iPhone with ${device.instanceId}!")
@@ -196,6 +201,7 @@ object MaestroSessionManager {
         reinstallDriver: Boolean,
         driverHostPort: Int?,
         platformConfiguration: PlatformConfiguration? = null,
+        iosDeviceSet: String? = null,
     ): MaestroSession {
         return when {
             selectedDevice.device != null -> MaestroSession(
@@ -211,8 +217,9 @@ object MaestroSessionManager {
                         !connectToExistingSession,
                         driverHostPort,
                         reinstallDriver,
+                        platformConfiguration = platformConfiguration,
                         deviceType = selectedDevice.device.deviceType,
-                        platformConfiguration = platformConfiguration
+                        iosDeviceSet = iosDeviceSet,
                     )
 
                     Platform.WEB -> pickWebDevice(isStudio, isHeadless)
@@ -237,6 +244,7 @@ object MaestroSessionManager {
                     driverHostPort = driverHostPort ?: defaultXcTestPort,
                     reinstallDriver = reinstallDriver,
                     platformConfiguration = platformConfiguration,
+                    iosDeviceSet = iosDeviceSet,
                 ),
                 device = null,
             )
@@ -302,15 +310,17 @@ object MaestroSessionManager {
         driverHostPort: Int,
         reinstallDriver: Boolean,
         platformConfiguration: PlatformConfiguration?,
+        iosDeviceSet: String? = null,
     ): Maestro {
-        val device = PickDeviceInteractor.pickDevice(deviceId, driverHostPort)
+    val device = PickDeviceInteractor.pickDevice(deviceId, driverHostPort, iosDeviceSet = iosDeviceSet)
         return createIOS(
             device.instanceId,
             openDriver,
             driverHostPort,
             reinstallDriver,
+            platformConfiguration = platformConfiguration,
             deviceType = device.deviceType,
-            platformConfiguration = platformConfiguration
+            iosDeviceSet = iosDeviceSet,
         )
     }
 
@@ -342,6 +352,7 @@ object MaestroSessionManager {
         reinstallDriver: Boolean,
         platformConfiguration: PlatformConfiguration?,
         deviceType: Device.DeviceType,
+        iosDeviceSet: String? = null,
     ): Maestro {
 
         val iOSDeviceType = when (deviceType) {
@@ -365,7 +376,7 @@ object MaestroSessionManager {
             }
             Device.DeviceType.SIMULATOR -> {
                 IOSDriverConfig(
-                    prebuiltRunner = false,
+                    prebuiltRunner = iosDeviceSet != null,
                     sourceDirectory =  "driver-iPhoneSimulator",
                     context = Context.CLI,
                     snapshotKeyHonorModalViews = platformConfiguration?.ios?.snapshotKeyHonorModalViews
@@ -383,6 +394,7 @@ object MaestroSessionManager {
             Device.DeviceType.SIMULATOR -> {
                 val simctlIOSDevice = SimctlIOSDevice(
                     deviceId = deviceId,
+                    iosDeviceSet = iosDeviceSet,
                 )
                 simctlIOSDevice
             }
@@ -396,7 +408,8 @@ object MaestroSessionManager {
             reinstallDriver = reinstallDriver,
             deviceType = iOSDeviceType,
             iOSDriverConfig = iOSDriverConfig,
-            deviceController = deviceController
+            deviceController = deviceController,
+            iosDeviceSet = iosDeviceSet
         )
 
         val xcTestDriverClient = XCTestDriverClient(

@@ -9,7 +9,7 @@ import maestro.device.Platform
 object StartDeviceTool {
     fun create(): RegisteredTool {
         return RegisteredTool(
-            Tool(
+                Tool(
                 name = "start_device",
                 description = "Start a device (simulator/emulator) and return its device ID. " +
                     "You must provide either a device_id (from list_devices) or a platform (ios or android). " +
@@ -25,6 +25,10 @@ object StartDeviceTool {
                             put("type", "string") 
                             put("description", "Platform to start (ios or android). Optional. Default: ios.")
                         }
+                        putJsonObject("ios_device_set") {
+                            put("type", "string")
+                            put("description", "Optional simctl device set path to use for this request")
+                        }
                     },
                     required = emptyList()
                 )
@@ -33,6 +37,7 @@ object StartDeviceTool {
             try {
                 val deviceId = request.arguments["device_id"]?.jsonPrimitive?.content
                 val platformStr = request.arguments["platform"]?.jsonPrimitive?.content ?: "ios"
+                val iosDeviceSet = request.arguments["ios_device_set"]?.jsonPrimitive?.content
                 
                 // Get all connected and available devices
                 val availableDevices = DeviceService.listAvailableForLaunchDevices(includeWeb = true)
@@ -59,9 +64,10 @@ object StartDeviceTool {
                     val available = availableDevices.find { it.modelId == deviceId }
                     if (available != null) {
                         val connectedDevice = DeviceService.startDevice(
-                            device = available,
-                            driverHostPort = null
-                        )
+                                device = available,
+                                driverHostPort = null,
+                                deviceSet = iosDeviceSet
+                            )
                         return@RegisteredTool CallToolResult(content = listOf(TextContent(buildResult(connectedDevice, false))))
                     }
                     return@RegisteredTool CallToolResult(
@@ -81,9 +87,10 @@ object StartDeviceTool {
                 val available = availableDevices.find { it.platform == platform }
                 if (available != null) {
                     val connectedDevice = DeviceService.startDevice(
-                        device = available,
-                        driverHostPort = null
-                    )
+                            device = available,
+                            driverHostPort = null,
+                            deviceSet = iosDeviceSet
+                        )
                     return@RegisteredTool CallToolResult(content = listOf(TextContent(buildResult(connectedDevice, false))))
                 }
                 return@RegisteredTool CallToolResult(

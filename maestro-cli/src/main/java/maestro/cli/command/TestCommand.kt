@@ -305,6 +305,7 @@ class TestCommand : Callable<Int> {
             includeWeb = includeWeb,
             host = parent?.host,
             port = parent?.port,
+            deviceSet = parent?.iosDeviceSet,
         )
         val availableDevices = connectedDevices.map { it.instanceId }.toSet()
         return getPassedOptionsDeviceIds(plan)
@@ -341,6 +342,7 @@ class TestCommand : Callable<Int> {
             includeWeb = includeWeb,
             host = parent?.host,
             port = parent?.port,
+            deviceSet = parent?.iosDeviceSet,
         )
         val availableDevicesIds = connectedDevices.map { it.instanceId }.toSet()
         val deviceIds = getPassedOptionsDeviceIds(plan)
@@ -445,6 +447,8 @@ class TestCommand : Callable<Int> {
             isHeadless = headless,
             reinstallDriver = reinstallDriver,
             executionPlan = executionPlan
+            ,
+            iosDeviceSet = parent?.iosDeviceSet
         ) { session ->
             val maestro = session.maestro
             val device = session.device

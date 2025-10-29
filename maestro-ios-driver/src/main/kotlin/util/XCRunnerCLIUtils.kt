@@ -75,9 +75,7 @@ object XCRunnerCLIUtils {
 
     fun uninstall(bundleId: String, deviceId: String) {
         CommandLineUtils.runCommand(
-            listOf(
-                "xcrun",
-                "simctl",
+            SimctlUtils.simctlBaseArgs(null) + listOf(
                 "uninstall",
                 deviceId,
                 bundleId
@@ -87,12 +85,12 @@ object XCRunnerCLIUtils {
 
     private fun runningApps(deviceId: String): Map<String, Int?> {
         val process = ProcessBuilder(
-            "xcrun",
-            "simctl",
-            "spawn",
-            deviceId,
-            "launchctl",
-            "list"
+            SimctlUtils.simctlBaseArgs(null) + listOf(
+                "spawn",
+                deviceId,
+                "launchctl",
+                "list"
+            )
         ).start()
 
         val processOutput = process.inputStream.bufferedReader().readLines()

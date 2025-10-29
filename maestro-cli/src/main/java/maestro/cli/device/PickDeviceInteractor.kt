@@ -15,15 +15,16 @@ object PickDeviceInteractor {
         driverHostPort: Int? = null,
         platform: Platform? = null,
         deviceIndex: Int? = null,
+        iosDeviceSet: String? = null,
     ): Device.Connected {
         if (deviceId != null) {
-            return DeviceService.listConnectedDevices()
+            return DeviceService.listConnectedDevices(deviceSet = iosDeviceSet)
                 .find {
                     it.instanceId.equals(deviceId, ignoreCase = true)
                 } ?: throw CliError("Device with id $deviceId is not connected")
         }
 
-        return pickDeviceInternal(platform, deviceIndex)
+        return pickDeviceInternal(platform, deviceIndex, iosDeviceSet)
             .let { pickedDevice ->
                 var result: Device = pickedDevice
 
@@ -34,7 +35,7 @@ object PickDeviceInteractor {
                         Platform.WEB -> PrintUtils.message("Launching ${result.description}")
                     }
 
-                    result = DeviceService.startDevice(result, driverHostPort)
+                    result = DeviceService.startDevice(result, driverHostPort, deviceSet = iosDeviceSet)
                 }
 
                 if (result !is Device.Connected) {
@@ -45,7 +46,7 @@ object PickDeviceInteractor {
             }
     }
 
-    private fun pickDeviceInternal(platform: Platform?, selectedIndex: Int? = null): Device {
+    private fun pickDeviceInternal(platform: Platform?, selectedIndex: Int? = null, iosDeviceSet: String? = null): Device {
         val connectedDevices = DeviceService.listConnectedDevices().withPlatform(platform)
 
         val selected = if(selectedIndex != null) {
@@ -65,13 +66,13 @@ object PickDeviceInteractor {
         }
 
         if (connectedDevices.isEmpty()) {
-            return startDevice(platform)
+            return startDevice(platform, iosDeviceSet)
         }
 
         return pickRunningDevice(connectedDevices)
     }
 
-    private fun startDevice(platform: Platform?): Device {
+    private fun startDevice(platform: Platform?, iosDeviceSet: String? = null): Device {
         if (EnvUtils.isWSL()) {
             throw CliError("No running emulator found. Start an emulator manually and try again.\nFor setup info checkout: https://maestro.mobile.dev/getting-started/installing-maestro/windows")
         }
@@ -94,7 +95,7 @@ object PickDeviceInteractor {
                         deviceType = Device.DeviceType.BROWSER
                     )
                 }
-                return DeviceCreateUtil.getOrCreateDevice(options.platform, options.osVersion, null, null, options.forceCreate)
+                return DeviceCreateUtil.getOrCreateDevice(options.platform, options.osVersion, null, null, options.forceCreate, iosDeviceSet = iosDeviceSet)
             }
             "2" -> {
                 PrintUtils.clearConsole()

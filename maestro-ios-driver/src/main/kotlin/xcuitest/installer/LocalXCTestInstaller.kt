@@ -35,6 +35,7 @@ class LocalXCTestInstaller(
     val reinstallDriver: Boolean = true,
     private val iOSDriverConfig: IOSDriverConfig,
     private val deviceController: IOSDevice,
+    private val iosDeviceSet: String? = null,
 ) : XCTestInstaller {
 
     private val logger = LoggerFactory.getLogger(LocalXCTestInstaller::class.java)
@@ -222,11 +223,12 @@ class LocalXCTestInstaller(
                 )
             }
             IOSDeviceType.SIMULATOR -> {
-                LocalSimulatorUtils.install(deviceId, bundlePath.toPath())
+                LocalSimulatorUtils.install(deviceId, bundlePath.toPath(), iosDeviceSet)
                 LocalSimulatorUtils.launchUITestRunner(
                     deviceId = deviceId,
                     port = defaultPort,
-                    snapshotKeyHonorModalViews = iOSDriverConfig.snapshotKeyHonorModalViews
+                    snapshotKeyHonorModalViews = iOSDriverConfig.snapshotKeyHonorModalViews,
+                    deviceSet = iosDeviceSet,
                 )
             }
         }
