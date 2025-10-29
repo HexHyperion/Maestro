@@ -244,8 +244,8 @@ object LocalSimulatorUtils {
         return folder.delete()
     }
 
-    private fun reinstallApp(deviceId: String, bundleId: String) {
-        val appBinaryPath = getAppBinaryDirectory(deviceId, bundleId)
+    private fun reinstallApp(deviceId: String, bundleId: String, deviceSet: String? = null) {
+        val appBinaryPath = getAppBinaryDirectory(deviceId, bundleId, deviceSet)
         if (appBinaryPath.isEmpty()) {
             throw SimctlError("Could not find app binary for bundle $bundleId at $appBinaryPath")
         }
@@ -260,8 +260,8 @@ object LocalSimulatorUtils {
             copyDirectoryRecursively(pathToBinary, tmpBundlePath)
 
             logger.info("Reinstalling and launching $bundleId")
-            uninstall(deviceId, bundleId)
-            install(deviceId, tmpBundlePath)
+            uninstall(deviceId, bundleId, deviceSet)
+            install(deviceId, tmpBundlePath, deviceSet)
             deleteFolderRecursively(tmpBundlePath.toFile())
             logger.info("App $bundleId reinstalled and launched")
         } else {
@@ -269,15 +269,15 @@ object LocalSimulatorUtils {
         }
     }
 
-    fun clearAppState(deviceId: String, bundleId: String) {
+    fun clearAppState(deviceId: String, bundleId: String, deviceSet: String? = null) {
         logger.info("Clearing app $bundleId state")
         // Stop the app before clearing the file system
         // This prevents the app from saving its state after it has been cleared
-        terminate(deviceId, bundleId)
-        ensureStopped(deviceId, bundleId)
+        terminate(deviceId, bundleId, deviceSet)
+        ensureStopped(deviceId, bundleId, deviceSet)
 
         // reinstall the app as that is the most stable way to clear state
-        reinstallApp(deviceId, bundleId)
+        reinstallApp(deviceId, bundleId, deviceSet)
     }
 
     private fun getAppBinaryDirectory(deviceId: String, bundleId: String, deviceSet: String? = null): String {
@@ -399,7 +399,7 @@ object LocalSimulatorUtils {
         )
     }
 
-    fun setAppleSimutilsPermissions(deviceId: String, bundleId: String, permissions: Map<String, String>) {
+    fun setAppleSimutilsPermissions(deviceId: String, bundleId: String, permissions: Map<String, String>, deviceSet: String? = null) {
         val permissionsMap = permissions.toMutableMap()
         val effectivePermissionsMap = mutableMapOf<String, String>()
 
@@ -461,7 +461,7 @@ object LocalSimulatorUtils {
         }
     }
 
-    fun setSimctlPermissions(deviceId: String, bundleId: String, permissions: Map<String, String>) {
+    fun setSimctlPermissions(deviceId: String, bundleId: String, permissions: Map<String, String>, deviceSet: String? = null) {
         val permissionsMap = permissions.toMutableMap()
         val effectivePermissionsMap = mutableMapOf<String, String>()
 
@@ -492,7 +492,7 @@ object LocalSimulatorUtils {
                     when (it.key) {
                         // TODO: more simctl supported permissions can be migrated here
                         "location" -> {
-                            setLocationPermission(deviceId, bundleId, it.value)
+                            setLocationPermission(deviceId, bundleId, it.value, deviceSet)
                         }
                     }
                 }

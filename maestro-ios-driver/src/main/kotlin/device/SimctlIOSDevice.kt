@@ -73,7 +73,7 @@ class SimctlIOSDevice(
     }
 
     override fun clearAppState(id: String) {
-        LocalSimulatorUtils.clearAppState(deviceId, id)
+        LocalSimulatorUtils.clearAppState(deviceId, id, iosDeviceSet)
     }
 
     override fun clearKeychain(): Result<Unit, Throwable> {
@@ -168,14 +168,14 @@ class SimctlIOSDevice(
 
         runCatching {
             logger.info("[Start] Setting permissions $formattedPermissions through applesimutils")
-            LocalSimulatorUtils.setAppleSimutilsPermissions(deviceId, id, permissions)
+            LocalSimulatorUtils.setAppleSimutilsPermissions(deviceId, id, permissions, iosDeviceSet)
             logger.info("[Done] Setting permissions through applesimutils")
         }.onFailure {
             logger.error("Failed setting permissions $permissions via applesimutils", it)
         }
 
         logger.info("[Start] Setting Permissions $formattedPermissions through simctl")
-        LocalSimulatorUtils.setSimctlPermissions(deviceId, id, permissions)
+        LocalSimulatorUtils.setSimctlPermissions(deviceId, id, permissions, iosDeviceSet)
         logger.info("[Done] Setting Permissions $formattedPermissions through simctl")
     }
 
