@@ -312,7 +312,7 @@ object MaestroSessionManager {
         platformConfiguration: PlatformConfiguration?,
         iosDeviceSet: String? = null,
     ): Maestro {
-    val device = PickDeviceInteractor.pickDevice(deviceId, driverHostPort, iosDeviceSet = iosDeviceSet)
+        val device = PickDeviceInteractor.pickDevice(deviceId, driverHostPort, iosDeviceSet = iosDeviceSet)
         return createIOS(
             device.instanceId,
             openDriver,

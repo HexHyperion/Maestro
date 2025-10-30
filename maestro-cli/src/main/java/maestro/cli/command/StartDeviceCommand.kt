@@ -95,7 +95,7 @@ class StartDeviceCommand : Callable<Int> {
         try {
             val (deviceLanguage, deviceCountry) = LocaleUtils.parseLocaleParams(locale, maestroPlatform)
 
-                DeviceCreateUtil.getOrCreateDevice(p, o, deviceLanguage, deviceCountry, forceCreate, iosDeviceSet = parent?.iosDeviceSet).let { device ->
+            DeviceCreateUtil.getOrCreateDevice(p, o, deviceLanguage, deviceCountry, forceCreate, iosDeviceSet = parent?.iosDeviceSet).let { device ->
                 PrintUtils.message(if (p == Platform.IOS) "Launching simulator..." else "Launching emulator...")
                 DeviceService.startDevice(
                     device = device,
