@@ -49,21 +49,21 @@ object LocalSimulatorUtils {
         "location"
     )
 
-    fun list(deviceSet: String? = null): SimctlList {
-        val command = SimctlUtils.simctlBaseArgs(deviceSet) + listOf("list", "-j")
+    fun list(iosDeviceSet: String? = null): SimctlList {
+        val command = SimctlUtils.simctlBaseArgs(iosDeviceSet) + listOf("list", "-j")
 
         val process = ProcessBuilder(command).start()
         val json = String(process.inputStream.readBytes())
 
         // print list
-        PrintUtils.log(deviceSet ?: "default device set")
+        PrintUtils.log(iosDeviceSet ?: "default device set")
 
         return jacksonObjectMapper().readValue(json)
     }
 
-    fun awaitLaunch(deviceId: String, deviceSet: String? = null) {
+    fun awaitLaunch(deviceId: String, iosDeviceSet: String? = null) {
         MaestroTimer.withTimeout(60000) {
-            if (list(deviceSet)
+            if (list(iosDeviceSet)
                     .devices
                     .values
                     .flatten()
@@ -73,9 +73,9 @@ object LocalSimulatorUtils {
         } ?: throw SimctlError("Device $deviceId did not boot in time")
     }
 
-    fun awaitShutdown(deviceId: String, timeoutMs: Long = 60000, deviceSet: String? = null) {
+    fun awaitShutdown(deviceId: String, timeoutMs: Long = 60000, iosDeviceSet: String? = null) {
         MaestroTimer.withTimeout(timeoutMs) {
-            if (list(deviceSet)
+            if (list(iosDeviceSet)
                     .devices
                     .values
                     .flatten()
@@ -92,29 +92,29 @@ object LocalSimulatorUtils {
         return process.inputStream.bufferedReader().readLine()
     }
 
-    fun bootSimulator(deviceId: String, deviceSet: String? = null) {
+    fun bootSimulator(deviceId: String, iosDeviceSet: String? = null) {
         runCommand(
-            SimctlUtils.simctlBaseArgs(deviceSet) + listOf(
+            SimctlUtils.simctlBaseArgs(iosDeviceSet) + listOf(
                 "boot",
                 deviceId
             ),
             waitForCompletion = true
         )
-        awaitLaunch(deviceId, deviceSet)
+        awaitLaunch(deviceId, iosDeviceSet)
     }
 
-    fun shutdownSimulator(deviceId: String, deviceSet: String? = null) {
+    fun shutdownSimulator(deviceId: String, iosDeviceSet: String? = null) {
         runCommand(
-            SimctlUtils.simctlBaseArgs(deviceSet) + listOf(
+            SimctlUtils.simctlBaseArgs(iosDeviceSet) + listOf(
                 "shutdown",
                 deviceId
             ),
             waitForCompletion = true
         )
-    awaitShutdown(deviceId, deviceSet = deviceSet)
+    awaitShutdown(deviceId, iosDeviceSet = iosDeviceSet)
     }
 
-    fun launchSimulator(deviceId: String, deviceSet: String? = null) {
+    fun launchSimulator(deviceId: String, iosDeviceSet: String? = null) {
         val simulatorPath = "${xcodePath()}/Applications/Simulator.app"
         var exceptionToThrow: Exception? = null
 
@@ -143,19 +143,19 @@ object LocalSimulatorUtils {
 
     fun reboot(
         deviceId: String,
-        deviceSet: String? = null,
+        iosDeviceSet: String? = null,
     ) {
-        shutdownSimulator(deviceId, deviceSet)
-        bootSimulator(deviceId, deviceSet)
+        shutdownSimulator(deviceId, iosDeviceSet)
+        bootSimulator(deviceId, iosDeviceSet)
     }
 
     fun addTrustedCertificate(
         deviceId: String,
         certificate: File,
-        deviceSet: String? = null,
+        iosDeviceSet: String? = null,
     ) {
         runCommand(
-            SimctlUtils.simctlBaseArgs(deviceSet) + listOf(
+            SimctlUtils.simctlBaseArgs(iosDeviceSet) + listOf(
                 "keychain",
                 deviceId,
                 "add-root-cert",
@@ -164,15 +164,15 @@ object LocalSimulatorUtils {
             waitForCompletion = true
         )
 
-        reboot(deviceId, deviceSet)
+        reboot(deviceId, iosDeviceSet)
     }
 
-    fun terminate(deviceId: String, bundleId: String, deviceSet: String? = null) {
+    fun terminate(deviceId: String, bundleId: String, iosDeviceSet: String? = null) {
         // Ignore error return: terminate will fail if the app is not running
         logger.info("[Start] Terminating app $bundleId")
         runCatching {
             runCommand(
-                SimctlUtils.simctlBaseArgs(deviceSet) + listOf(
+                SimctlUtils.simctlBaseArgs(iosDeviceSet) + listOf(
                     "terminate",
                     deviceId,
                     bundleId
@@ -187,9 +187,9 @@ object LocalSimulatorUtils {
         logger.info("[Done] Terminating app $bundleId")
     }
 
-    private fun isAppRunning(deviceId: String, bundleId: String, deviceSet: String? = null): Boolean {
+    private fun isAppRunning(deviceId: String, bundleId: String, iosDeviceSet: String? = null): Boolean {
         val process = ProcessBuilder(
-            SimctlUtils.simctlBaseArgs(deviceSet) + listOf(
+            SimctlUtils.simctlBaseArgs(iosDeviceSet) + listOf(
                 "spawn",
                 deviceId,
                 "launchctl",
@@ -200,10 +200,10 @@ object LocalSimulatorUtils {
         return String(process.inputStream.readBytes()).trimEnd().contains(bundleId)
     }
 
-    private fun ensureStopped(deviceId: String, bundleId: String, deviceSet: String? = null) {
+    private fun ensureStopped(deviceId: String, bundleId: String, iosDeviceSet: String? = null) {
         MaestroTimer.withTimeout(10000) {
             while (true) {
-                if (isAppRunning(deviceId, bundleId, deviceSet)) {
+                if (isAppRunning(deviceId, bundleId, iosDeviceSet)) {
                     Thread.sleep(1000)
                 } else {
                     return@withTimeout
@@ -212,10 +212,10 @@ object LocalSimulatorUtils {
         } ?: throw SimctlError("App $bundleId did not stop in time")
     }
 
-    private fun ensureRunning(deviceId: String, bundleId: String, deviceSet: String? = null) {
+    private fun ensureRunning(deviceId: String, bundleId: String, iosDeviceSet: String? = null) {
         MaestroTimer.withTimeout(10000) {
             while (true) {
-                if (isAppRunning(deviceId, bundleId, deviceSet)) {
+                if (isAppRunning(deviceId, bundleId, iosDeviceSet)) {
                     return@withTimeout
                 } else {
                     Thread.sleep(1000)
@@ -244,8 +244,8 @@ object LocalSimulatorUtils {
         return folder.delete()
     }
 
-    private fun reinstallApp(deviceId: String, bundleId: String, deviceSet: String? = null) {
-        val appBinaryPath = getAppBinaryDirectory(deviceId, bundleId, deviceSet)
+    private fun reinstallApp(deviceId: String, bundleId: String, iosDeviceSet: String? = null) {
+        val appBinaryPath = getAppBinaryDirectory(deviceId, bundleId, iosDeviceSet)
         if (appBinaryPath.isEmpty()) {
             throw SimctlError("Could not find app binary for bundle $bundleId at $appBinaryPath")
         }
@@ -260,8 +260,8 @@ object LocalSimulatorUtils {
             copyDirectoryRecursively(pathToBinary, tmpBundlePath)
 
             logger.info("Reinstalling and launching $bundleId")
-            uninstall(deviceId, bundleId, deviceSet)
-            install(deviceId, tmpBundlePath, deviceSet)
+            uninstall(deviceId, bundleId, iosDeviceSet)
+            install(deviceId, tmpBundlePath, iosDeviceSet)
             deleteFolderRecursively(tmpBundlePath.toFile())
             logger.info("App $bundleId reinstalled and launched")
         } else {
@@ -269,20 +269,20 @@ object LocalSimulatorUtils {
         }
     }
 
-    fun clearAppState(deviceId: String, bundleId: String, deviceSet: String? = null) {
+    fun clearAppState(deviceId: String, bundleId: String, iosDeviceSet: String? = null) {
         logger.info("Clearing app $bundleId state")
         // Stop the app before clearing the file system
         // This prevents the app from saving its state after it has been cleared
-        terminate(deviceId, bundleId, deviceSet)
-        ensureStopped(deviceId, bundleId, deviceSet)
+        terminate(deviceId, bundleId, iosDeviceSet)
+        ensureStopped(deviceId, bundleId, iosDeviceSet)
 
         // reinstall the app as that is the most stable way to clear state
-        reinstallApp(deviceId, bundleId, deviceSet)
+        reinstallApp(deviceId, bundleId, iosDeviceSet)
     }
 
-    private fun getAppBinaryDirectory(deviceId: String, bundleId: String, deviceSet: String? = null): String {
+    private fun getAppBinaryDirectory(deviceId: String, bundleId: String, iosDeviceSet: String? = null): String {
         val process = ProcessBuilder(
-            SimctlUtils.simctlBaseArgs(deviceSet) + listOf(
+            SimctlUtils.simctlBaseArgs(iosDeviceSet) + listOf(
                 "get_app_container",
                 deviceId,
                 bundleId,
@@ -299,9 +299,9 @@ object LocalSimulatorUtils {
         return output
     }
 
-    private fun getApplicationDataDirectory(deviceId: String, bundleId: String, deviceSet: String? = null): String {
+    private fun getApplicationDataDirectory(deviceId: String, bundleId: String, iosDeviceSet: String? = null): String {
         val process = ProcessBuilder(
-            SimctlUtils.simctlBaseArgs(deviceSet) + listOf(
+            SimctlUtils.simctlBaseArgs(iosDeviceSet) + listOf(
                 "get_app_container",
                 deviceId,
                 bundleId,
@@ -316,10 +316,10 @@ object LocalSimulatorUtils {
         deviceId: String,
         bundleId: String,
         launchArguments: List<String> = emptyList(),
-        deviceSet: String? = null,
+        iosDeviceSet: String? = null,
     ) {
         runCommand(
-            SimctlUtils.simctlBaseArgs(deviceSet) + listOf(
+            SimctlUtils.simctlBaseArgs(iosDeviceSet) + listOf(
                 "launch",
                 deviceId,
                 bundleId,
@@ -331,7 +331,7 @@ object LocalSimulatorUtils {
         deviceId: String,
         port: Int,
         snapshotKeyHonorModalViews: Boolean?,
-        deviceSet: String? = null,
+        iosDeviceSet: String? = null,
     ) {
         val outputFile = File(XCRunnerCLIUtils.logDirectory, "xctest_runner_$date.log")
         val params = mutableMapOf("SIMCTL_CHILD_PORT" to port.toString())
@@ -339,7 +339,7 @@ object LocalSimulatorUtils {
             params["SIMCTL_CHILD_snapshotKeyHonorModalViews"] = snapshotKeyHonorModalViews.toString()
         }
         runCommand(
-            SimctlUtils.simctlBaseArgs(deviceSet) + listOf(
+            SimctlUtils.simctlBaseArgs(iosDeviceSet) + listOf(
                 "launch",
                 "--console",
                 "--terminate-running-process",
@@ -352,9 +352,9 @@ object LocalSimulatorUtils {
         )
     }
 
-    fun setLocation(deviceId: String, latitude: Double, longitude: Double, deviceSet: String? = null) {
+    fun setLocation(deviceId: String, latitude: Double, longitude: Double, iosDeviceSet: String? = null) {
         runCommand(
-            SimctlUtils.simctlBaseArgs(deviceSet) + listOf(
+            SimctlUtils.simctlBaseArgs(iosDeviceSet) + listOf(
                 "location",
                 deviceId,
                 "set",
@@ -363,9 +363,9 @@ object LocalSimulatorUtils {
         )
     }
 
-    fun openURL(deviceId: String, url: String, deviceSet: String? = null) {
+    fun openURL(deviceId: String, url: String, iosDeviceSet: String? = null) {
         runCommand(
-            SimctlUtils.simctlBaseArgs(deviceSet) + listOf(
+            SimctlUtils.simctlBaseArgs(iosDeviceSet) + listOf(
                 "openurl",
                 deviceId,
                 url,
@@ -373,9 +373,9 @@ object LocalSimulatorUtils {
         )
     }
 
-    fun uninstall(deviceId: String, bundleId: String, deviceSet: String? = null) {
+    fun uninstall(deviceId: String, bundleId: String, iosDeviceSet: String? = null) {
         runCommand(
-            SimctlUtils.simctlBaseArgs(deviceSet) + listOf(
+            SimctlUtils.simctlBaseArgs(iosDeviceSet) + listOf(
                 "uninstall",
                 deviceId,
                 bundleId
@@ -383,9 +383,9 @@ object LocalSimulatorUtils {
         )
     }
 
-    fun addMedia(deviceId: String, path: String, deviceSet: String? = null) {
+    fun addMedia(deviceId: String, path: String, iosDeviceSet: String? = null) {
         runCommand(
-            SimctlUtils.simctlBaseArgs(deviceSet) + listOf(
+            SimctlUtils.simctlBaseArgs(iosDeviceSet) + listOf(
                 "addmedia",
                 deviceId,
                 path
@@ -393,13 +393,13 @@ object LocalSimulatorUtils {
         )
     }
 
-    fun clearKeychain(deviceId: String, deviceSet: String? = null) {
+    fun clearKeychain(deviceId: String, iosDeviceSet: String? = null) {
         runCommand(
-            SimctlUtils.simctlBaseArgs(deviceSet) + listOf("keychain", deviceId, "reset")
+            SimctlUtils.simctlBaseArgs(iosDeviceSet) + listOf("keychain", deviceId, "reset")
         )
     }
 
-    fun setAppleSimutilsPermissions(deviceId: String, bundleId: String, permissions: Map<String, String>, deviceSet: String? = null) {
+    fun setAppleSimutilsPermissions(deviceId: String, bundleId: String, permissions: Map<String, String>, iosDeviceSet: String? = null) {
         val permissionsMap = permissions.toMutableMap()
         val effectivePermissionsMap = mutableMapOf<String, String>()
 
@@ -461,7 +461,7 @@ object LocalSimulatorUtils {
         }
     }
 
-    fun setSimctlPermissions(deviceId: String, bundleId: String, permissions: Map<String, String>, deviceSet: String? = null) {
+    fun setSimctlPermissions(deviceId: String, bundleId: String, permissions: Map<String, String>, iosDeviceSet: String? = null) {
         val permissionsMap = permissions.toMutableMap()
         val effectivePermissionsMap = mutableMapOf<String, String>()
 
@@ -492,18 +492,18 @@ object LocalSimulatorUtils {
                     when (it.key) {
                         // TODO: more simctl supported permissions can be migrated here
                         "location" -> {
-                            setLocationPermission(deviceId, bundleId, it.value, deviceSet)
+                            setLocationPermission(deviceId, bundleId, it.value, iosDeviceSet)
                         }
                     }
                 }
             }
     }
 
-    private fun setLocationPermission(deviceId: String, bundleId: String, value: String, deviceSet: String? = null) {
+    private fun setLocationPermission(deviceId: String, bundleId: String, value: String, iosDeviceSet: String? = null) {
         when (value) {
             "always" -> {
                 runCommand(
-                    SimctlUtils.simctlBaseArgs(deviceSet) + listOf(
+                    SimctlUtils.simctlBaseArgs(iosDeviceSet) + listOf(
                         "privacy",
                         deviceId,
                         "grant",
@@ -515,7 +515,7 @@ object LocalSimulatorUtils {
 
             "inuse" -> {
                 runCommand(
-                    SimctlUtils.simctlBaseArgs(deviceSet) + listOf(
+                    SimctlUtils.simctlBaseArgs(iosDeviceSet) + listOf(
                         "privacy",
                         deviceId,
                         "grant",
@@ -527,7 +527,7 @@ object LocalSimulatorUtils {
 
             "never" -> {
                 runCommand(
-                    SimctlUtils.simctlBaseArgs(deviceSet) + listOf(
+                    SimctlUtils.simctlBaseArgs(iosDeviceSet) + listOf(
                         "privacy",
                         deviceId,
                         "revoke",
@@ -539,7 +539,7 @@ object LocalSimulatorUtils {
 
             "unset" -> {
                 runCommand(
-                    SimctlUtils.simctlBaseArgs(deviceSet) + listOf(
+                    SimctlUtils.simctlBaseArgs(iosDeviceSet) + listOf(
                         "privacy",
                         deviceId,
                         "reset",
@@ -575,9 +575,9 @@ object LocalSimulatorUtils {
         }
     }
 
-    fun install(deviceId: String, path: Path, deviceSet: String? = null) {
+    fun install(deviceId: String, path: Path, iosDeviceSet: String? = null) {
         runCommand(
-            SimctlUtils.simctlBaseArgs(deviceSet) + listOf(
+            SimctlUtils.simctlBaseArgs(iosDeviceSet) + listOf(
                 "install",
                 deviceId,
                 path.toAbsolutePath().toString(),
@@ -585,7 +585,7 @@ object LocalSimulatorUtils {
         )
     }
 
-    fun install(deviceId: String, stream: InputStream, deviceSet: String? = null) {
+    fun install(deviceId: String, stream: InputStream, iosDeviceSet: String? = null) {
         val temp = createTempDirectory()
         val extractDir = temp.toFile()
 
@@ -598,7 +598,7 @@ object LocalSimulatorUtils {
             .first()
 
         runCommand(
-            SimctlUtils.simctlBaseArgs(deviceSet) + listOf(
+            SimctlUtils.simctlBaseArgs(iosDeviceSet) + listOf(
                 "install",
                 deviceId,
                 app.absolutePath,
@@ -641,9 +641,9 @@ object LocalSimulatorUtils {
         }
     }
 
-    fun setDeviceLanguage(deviceId: String, language: String, deviceSet: String? = null) {
+    fun setDeviceLanguage(deviceId: String, language: String, iosDeviceSet: String? = null) {
         runCommand(
-            SimctlUtils.simctlBaseArgs(deviceSet) + listOf(
+            SimctlUtils.simctlBaseArgs(iosDeviceSet) + listOf(
                 "spawn",
                 deviceId,
                 "defaults",
@@ -655,9 +655,9 @@ object LocalSimulatorUtils {
         )
     }
 
-    fun setDeviceLocale(deviceId: String, locale: String, deviceSet: String? = null) {
+    fun setDeviceLocale(deviceId: String, locale: String, iosDeviceSet: String? = null) {
         runCommand(
-            SimctlUtils.simctlBaseArgs(deviceSet) + listOf(
+            SimctlUtils.simctlBaseArgs(iosDeviceSet) + listOf(
                 "spawn",
                 deviceId,
                 "defaults",

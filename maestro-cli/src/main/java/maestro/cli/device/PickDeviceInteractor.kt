@@ -18,7 +18,7 @@ object PickDeviceInteractor {
         iosDeviceSet: String? = null,
     ): Device.Connected {
         if (deviceId != null) {
-            return DeviceService.listConnectedDevices(deviceSet = iosDeviceSet)
+            return DeviceService.listConnectedDevices(iosDeviceSet = iosDeviceSet)
                 .find {
                     it.instanceId.equals(deviceId, ignoreCase = true)
                 } ?: throw CliError("Device with id $deviceId is not connected")
@@ -35,7 +35,7 @@ object PickDeviceInteractor {
                         Platform.WEB -> PrintUtils.message("Launching ${result.description}")
                     }
 
-                    result = DeviceService.startDevice(result, driverHostPort, deviceSet = iosDeviceSet)
+                    result = DeviceService.startDevice(result, driverHostPort, iosDeviceSet = iosDeviceSet)
                 }
 
                 if (result !is Device.Connected) {

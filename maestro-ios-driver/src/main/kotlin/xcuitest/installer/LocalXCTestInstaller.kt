@@ -228,7 +228,7 @@ class LocalXCTestInstaller(
                     deviceId = deviceId,
                     port = defaultPort,
                     snapshotKeyHonorModalViews = iOSDriverConfig.snapshotKeyHonorModalViews,
-                    deviceSet = iosDeviceSet,
+                    iosDeviceSet = iosDeviceSet,
                 )
             }
         }

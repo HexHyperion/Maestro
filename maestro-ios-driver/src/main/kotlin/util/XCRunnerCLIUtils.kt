@@ -38,8 +38,8 @@ object XCRunnerCLIUtils {
         logDirectory.listFiles()?.forEach { it.deleteRecursively() }
     }
 
-    fun listApps(deviceId: String): Set<String> {
-        val process = Runtime.getRuntime().exec(arrayOf("bash", "-c", "xcrun simctl listapps $deviceId | plutil -convert json - -o -"))
+    fun listApps(deviceId: String, deviceSet: String? = null): Set<String> {
+        val process = Runtime.getRuntime().exec(arrayOf("bash", "-c", SimctlUtils.simctlBaseArgs(deviceSet).joinToString(" "), "listapps $deviceId | plutil -convert json - -o -"))
 
         val json = String(process.inputStream.readBytes())
 
@@ -73,9 +73,9 @@ object XCRunnerCLIUtils {
             .waitFor()
     }
 
-    fun uninstall(bundleId: String, deviceId: String) {
+    fun uninstall(bundleId: String, deviceId: String, deviceSet: String? = null) {
         CommandLineUtils.runCommand(
-            SimctlUtils.simctlBaseArgs(null) + listOf(
+            SimctlUtils.simctlBaseArgs(deviceSet) + listOf(
                 "uninstall",
                 deviceId,
                 bundleId
@@ -83,9 +83,9 @@ object XCRunnerCLIUtils {
         )
     }
 
-    private fun runningApps(deviceId: String): Map<String, Int?> {
+    private fun runningApps(deviceId: String, deviceSet: String? = null): Map<String, Int?> {
         val process = ProcessBuilder(
-            SimctlUtils.simctlBaseArgs(null) + listOf(
+            SimctlUtils.simctlBaseArgs(deviceSet) + listOf(
                 "spawn",
                 deviceId,
                 "launchctl",
@@ -114,8 +114,8 @@ object XCRunnerCLIUtils {
             }
     }
 
-    fun pidForApp(bundleId: String, deviceId: String): Int? {
-        return runningApps(deviceId)[bundleId]
+    fun pidForApp(bundleId: String, deviceId: String, deviceSet: String? = null): Int? {
+        return runningApps(deviceId, deviceSet)[bundleId]
     }
 
     fun runXcTestWithoutBuild(deviceId: String, xcTestRunFilePath: String, port: Int, snapshotKeyHonorModalViews: Boolean?): Process {

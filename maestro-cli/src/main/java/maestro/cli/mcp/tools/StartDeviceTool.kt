@@ -66,7 +66,7 @@ object StartDeviceTool {
                         val connectedDevice = DeviceService.startDevice(
                                 device = available,
                                 driverHostPort = null,
-                                deviceSet = iosDeviceSet
+                                iosDeviceSet = iosDeviceSet
                             )
                         return@RegisteredTool CallToolResult(content = listOf(TextContent(buildResult(connectedDevice, false))))
                     }
@@ -89,7 +89,7 @@ object StartDeviceTool {
                     val connectedDevice = DeviceService.startDevice(
                             device = available,
                             driverHostPort = null,
-                            deviceSet = iosDeviceSet
+                            iosDeviceSet = iosDeviceSet
                         )
                     return@RegisteredTool CallToolResult(content = listOf(TextContent(buildResult(connectedDevice, false))))
                 }

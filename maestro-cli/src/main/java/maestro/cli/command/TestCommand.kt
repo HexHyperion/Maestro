@@ -305,7 +305,7 @@ class TestCommand : Callable<Int> {
             includeWeb = includeWeb,
             host = parent?.host,
             port = parent?.port,
-            deviceSet = parent?.iosDeviceSet,
+            iosDeviceSet = parent?.iosDeviceSet,
         )
         val availableDevices = connectedDevices.map { it.instanceId }.toSet()
         return getPassedOptionsDeviceIds(plan)
@@ -342,7 +342,7 @@ class TestCommand : Callable<Int> {
             includeWeb = includeWeb,
             host = parent?.host,
             port = parent?.port,
-            deviceSet = parent?.iosDeviceSet,
+            iosDeviceSet = parent?.iosDeviceSet,
         )
         val availableDevicesIds = connectedDevices.map { it.instanceId }.toSet()
         val deviceIds = getPassedOptionsDeviceIds(plan)

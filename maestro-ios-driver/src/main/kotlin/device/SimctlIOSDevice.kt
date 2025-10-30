@@ -91,12 +91,12 @@ class SimctlIOSDevice(
             deviceId = deviceId,
             bundleId = id,
             launchArguments = iOSLaunchArguments,
-            deviceSet = iosDeviceSet,
+            iosDeviceSet = iosDeviceSet,
         )
     }
 
     override fun stop(id: String) {
-        LocalSimulatorUtils.terminate(deviceId, bundleId = id, deviceSet = iosDeviceSet)
+        LocalSimulatorUtils.terminate(deviceId, bundleId = id, iosDeviceSet = iosDeviceSet)
     }
 
     override fun isKeyboardVisible(): Boolean {

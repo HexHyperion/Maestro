@@ -100,7 +100,7 @@ class StartDeviceCommand : Callable<Int> {
                 DeviceService.startDevice(
                     device = device,
                     driverHostPort = parent?.port,
-                    deviceSet = parent?.iosDeviceSet
+                    iosDeviceSet = parent?.iosDeviceSet
                 )
             }
         } catch (e: LocaleValidationIosException) {
