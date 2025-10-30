@@ -8,7 +8,6 @@ import org.rauschig.jarchivelib.ArchiverFactory
 import org.slf4j.LoggerFactory
 import util.CommandLineUtils.runCommand
 import java.io.File
-import util.PrintUtils
 import java.io.InputStream
 import java.lang.ProcessBuilder.Redirect.PIPE
 import java.nio.file.Files
@@ -54,9 +53,6 @@ object LocalSimulatorUtils {
 
         val process = ProcessBuilder(command).start()
         val json = String(process.inputStream.readBytes())
-
-        // print list
-        PrintUtils.log(iosDeviceSet ?: "default device set")
 
         return jacksonObjectMapper().readValue(json)
     }
