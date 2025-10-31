@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 2.0.8
+
+### Features
+- Added support for custom iOS device sets, now the user can provide a different location of the simulators with a `--device-set` flag
+
 ## 2.0.7
 
 ### Fix
