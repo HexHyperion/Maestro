@@ -19,6 +19,7 @@ import java.nio.file.Files
 
 class SimctlIOSDevice(
     override val deviceId: String,
+    private val iosDeviceSet: String? = null,
 ) : IOSDevice {
 
     companion object {
@@ -64,20 +65,20 @@ class SimctlIOSDevice(
     }
 
     override fun install(stream: InputStream) {
-        LocalSimulatorUtils.install(deviceId, stream)
+        LocalSimulatorUtils.install(deviceId, stream, iosDeviceSet)
     }
 
     override fun uninstall(id: String) {
-        LocalSimulatorUtils.uninstall(deviceId, id)
+        LocalSimulatorUtils.uninstall(deviceId, id, iosDeviceSet)
     }
 
     override fun clearAppState(id: String) {
-        LocalSimulatorUtils.clearAppState(deviceId, id)
+        LocalSimulatorUtils.clearAppState(deviceId, id, iosDeviceSet)
     }
 
     override fun clearKeychain(): Result<Unit, Throwable> {
         return runCatching {
-            LocalSimulatorUtils.clearKeychain(deviceId)
+            LocalSimulatorUtils.clearKeychain(deviceId, iosDeviceSet)
         }
     }
 
@@ -90,11 +91,12 @@ class SimctlIOSDevice(
             deviceId = deviceId,
             bundleId = id,
             launchArguments = iOSLaunchArguments,
+            iosDeviceSet = iosDeviceSet,
         )
     }
 
     override fun stop(id: String) {
-        LocalSimulatorUtils.terminate(deviceId, bundleId = id)
+        LocalSimulatorUtils.terminate(deviceId, bundleId = id, iosDeviceSet = iosDeviceSet)
     }
 
     override fun isKeyboardVisible(): Boolean {
@@ -103,7 +105,7 @@ class SimctlIOSDevice(
 
     override fun openLink(link: String): Result<Unit, Throwable> {
         return runCatching {
-            LocalSimulatorUtils.openURL(deviceId, link)
+            LocalSimulatorUtils.openURL(deviceId, link, iosDeviceSet)
         }
     }
 
@@ -140,12 +142,12 @@ class SimctlIOSDevice(
     }
 
     override fun addMedia(path: String) {
-        LocalSimulatorUtils.addMedia(deviceId, path)
+        LocalSimulatorUtils.addMedia(deviceId, path, iosDeviceSet)
     }
 
     override fun setLocation(latitude: Double, longitude: Double): Result<Unit, Throwable> {
         return runCatching {
-            LocalSimulatorUtils.setLocation(deviceId, latitude, longitude)
+            LocalSimulatorUtils.setLocation(deviceId, latitude, longitude, iosDeviceSet)
         }
     }
 
@@ -166,14 +168,14 @@ class SimctlIOSDevice(
 
         runCatching {
             logger.info("[Start] Setting permissions $formattedPermissions through applesimutils")
-            LocalSimulatorUtils.setAppleSimutilsPermissions(deviceId, id, permissions)
+            LocalSimulatorUtils.setAppleSimutilsPermissions(deviceId, id, permissions, iosDeviceSet)
             logger.info("[Done] Setting permissions through applesimutils")
         }.onFailure {
             logger.error("Failed setting permissions $permissions via applesimutils", it)
         }
 
         logger.info("[Start] Setting Permissions $formattedPermissions through simctl")
-        LocalSimulatorUtils.setSimctlPermissions(deviceId, id, permissions)
+        LocalSimulatorUtils.setSimctlPermissions(deviceId, id, permissions, iosDeviceSet)
         logger.info("[Done] Setting Permissions $formattedPermissions through simctl")
     }
 

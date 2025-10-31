@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://www.maestro.dev">
-    <img width="1200" alt="Maestro logo" src="https://github.com/mobile-dev-inc/Maestro/blob/main/assets/banne_logo.png" />
+    <img width="1200" alt="Maestro logo" src="./assets/banne_logo.png" />
   </a>
 </p>
 
@@ -12,6 +12,10 @@
 <p align="center">
   <strong>Maestro</strong> is an open-source framework that makes UI and end-to-end testing for Android, iOS, and web apps simple and fast.<br/>
   Write your first test in under five minutes using YAML flows and run them on any emulator, simulator, or browser.
+</p>
+
+<p align="center">
+  This fork introduces an experimental <code>--device-set</code> option for the <code>maestro</code> command, which allows to specify a custom location where the target iOS simulators are located. It has no effect on Android emulators, as <code>adb</code> can access them anywhere. Gives best results with <code>--device</code> set, but will work without it as well.
 </p>
 
 <img src="https://user-images.githubusercontent.com/847683/187275009-ddbdf963-ce1d-4e07-ac08-b10f145e8894.gif" />

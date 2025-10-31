@@ -77,6 +77,7 @@ class QueryCommand : Runnable {
             deviceId = parent?.deviceId,
             platform = parent?.platform,
             teamId = appleTeamId,
+            iosDeviceSet = parent?.iosDeviceSet,
         ) { session ->
             val filters = mutableListOf<ElementFilter>()
 

@@ -22,6 +22,10 @@ object TakeScreenshotTool {
                             put("type", "string")
                             put("description", "The ID of the device to take a screenshot from")
                         }
+                        putJsonObject("ios_device_set") {
+                            put("type", "string")
+                            put("description", "Optional simctl device set path to use for this request")
+                        }
                     },
                     required = listOf("device_id")
                 )
@@ -37,12 +41,15 @@ object TakeScreenshotTool {
                     )
                 }
                 
+                val iosDeviceSet = request.arguments["ios_device_set"]?.jsonPrimitive?.content
+
                 val result = sessionManager.newSession(
                     host = null,
                     port = null,
                     driverHostPort = null,
                     deviceId = deviceId,
-                    platform = null
+                    platform = null,
+                    iosDeviceSet = iosDeviceSet,
                 ) { session ->
                     val buffer = Buffer()
                     session.maestro.takeScreenshot(buffer, true)

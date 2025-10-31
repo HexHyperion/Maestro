@@ -54,6 +54,10 @@ object TapOnTool {
                             put("type", "boolean")
                             put("description", "If true, only match selected elements. If false, only match unselected elements. Omit this field to match regardless of selection state.")
                         }
+                        putJsonObject("ios_device_set") {
+                            put("type", "string")
+                            put("description", "Optional simctl device set path to use for this request")
+                        }
                     },
                     required = listOf("device_id")
                 )
@@ -85,12 +89,15 @@ object TapOnTool {
                     )
                 }
                 
+                val iosDeviceSet = request.arguments["ios_device_set"]?.jsonPrimitive?.content
+
                 val result = sessionManager.newSession(
                     host = null,
                     port = null,
                     driverHostPort = null,
                     deviceId = deviceId,
-                    platform = null
+                    platform = null,
+                    iosDeviceSet = iosDeviceSet,
                 ) { session ->
                     // Escape special regex characters to prevent regex injection issues
                     fun escapeRegex(input: String): String {
